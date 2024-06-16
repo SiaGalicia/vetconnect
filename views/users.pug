@@ -1,0 +1,201 @@
+extends layout
+block content
+    #exampleModal.modal.fade(tabindex='-1' aria-labelledby='exampleModalLabel' aria-hidden='true')
+        .modal-dialog
+            .modal-content
+                .modal-header
+                    h5#exampleModalLabel.modal-title Nueva consulta
+                    button.btn-close(type='button' data-bs-dismiss='modal' aria-label='Close')
+                .modal-body
+                    label.labels.mb-1(label-for='textconsult') Describa su problema:
+                    textarea#textconsult.form-control(name='textconsult'  maxlength="1000"  required)
+                    span Máximo 1000 caracteres.
+                .modal-footer
+                    button#createButton.btn.btn-primary.my-3(type='button' onclick='createRoom()') Crear consulta
+                    button.btn.btn-secondary(type='button' data-bs-dismiss='modal') Cerrar
+    .container
+        .main-body
+            .row.gutters-sm
+                .col-md-4.mb-3
+                    .card
+                        .card-body
+                            .d-flex.flex-column.align-items-center.text-center
+                                img.rounded-circle(src='/upload/'+userInfo.img alt=userInfo.nickname width='150')
+                                .mt-3
+                                    span.p-3.py-5
+                                        form(action='/users/imagedchange' method='POST' enctype="multipart/form-data")
+                                            .form-group
+                                                label.labels.mb-1(label-for='profileimage') Cambiar imagen
+                                                input#profileimage.form-control(type='file' name='profileimage'  value='No hay archivo seleccionado' accept='image/*' onchange="form.submit()")
+                    .card.mt-3
+                        .p-3.py-5
+                            h5.text-right Cambiar contraseña
+                            if (result=="success")
+                                .mb-2.text-center.text-success La contraseña ha sido cambiada
+                            if (result=="notfound") 
+                                .mb-2.text-center.text-danger Contraseñas no coinciden
+                            if (result=="notexist") 
+                                .mb-2.text-center.text-danger Contraseña no existe
+                            form(action='/users/passwordchange', method='POST')
+                                .form-group
+                                    label.labels(label-for='oldPassword') Contraseña actual
+                                    input#oldPassword.form-control(type='password' name='oldPassword'  maxlength="45"  required)
+                                .form-group.mt-3
+                                    label.labels(label-for='newPassword') Nueva contraseña
+                                    input#newPassword.form-control(type='password' name='newPassword'  minlength="8" maxlength="45" pattern="^[A-Za-z0-9_*+?@$!*?&]+$" title="Ingresa letras (mayúsculas y minúsculas), números o los símbolos especiales _+?@$!*?&." required)
+                                .form-group.mt-3
+                                    label.labels(label-for='confirmPassword') Confirmar nueva contraseña
+                                    input#confirmPassword.form-control(type='password' name='confirmPassword' required)
+                                .mt-3.text-center
+                                    button.btn.btn-primary.profile-button(type='submit') Cambiar contraseña  
+                .col-md-8
+                    .card.mb-3
+                        .card-body
+                            .row
+                                .col-sm-3
+                                    h6.mb-0 Nickname
+                                .col-sm-9.text-secondary #{userInfo.nickname}
+                            hr
+                            .row
+                                .col-sm-3
+                                    h6.mb-0 Nombre y apellido
+                                .col-sm-9.text-secondary #{userInfo.name}
+                            hr
+                            .row
+                                .col-sm-3
+                                    h6.mb-0 Correo electronico
+                                .col-sm-9.text-secondary #{userInfo.username}
+                            if(userInfo.familiarName)
+                                hr
+                                .row
+                                    .col-sm-3
+                                        h6.mb-0 Mascota
+                                    .col-sm-9.text-secondary #{userInfo.familiarName} 
+                                        if(userInfo.familiarType)
+                                            span (#{userInfo.familiarType})                              
+                            //- hr
+                            //- .row
+                            //-     .col-sm-12
+                            //-         a.btn.btn-info(target='__blank' href='https://www.bootdey.com/snippets/view/profile-edit-data-and-skills') Edit
+                    .row.gutters-sm
+                        .col-sm-12.mb-3
+                            main#main
+                                if (chats.length==0&&role=="ROLE_USER")
+                                    button.btn.btn-primary(type='button' data-bs-toggle='modal' data-bs-target='#exampleModal') Nueva consulta
+                                if (chats.length==0&&chatsWithoutDoctor.length==0&&(role=="ROLE_DOCTOR"||role=="ROLE_ADMIN"))
+                                    h2 No hay consultas activas
+                                if (chats.length>0)                
+                                    h2 Mis consultas
+                                    .row.mb-3
+                                        each chat in chats
+                                            .mt-3
+                                                .card.text-bg-light.mb-3.h-100(style='max-width: 18rem;')
+                                                    .card-header(style='height: 4rem;') Ref: #{chat.idChat} #{chat.nameChat} 
+                                                    .card-body
+                                                        p.card-text Consulta en progreso
+                                                        .row    
+                                                            .col-3
+                                                                a.btn.btn-primary(href="/chat/"+chat.idChat) Unir  
+                                                            .col-8                                               
+                                                                form(action="/users/finalize/"+chat.idChat method="POST")                                            
+                                                                    button(type="submit").btn.btn-danger Finalizar    
+                                if (chatsWithoutDoctor.length>0&&(role=="ROLE_DOCTOR"||role=="ROLE_ADMIN"))
+                                    h2 Consultas sin atención
+                                    .row.mb-3
+                                        each chatWithoutDoctor in chatsWithoutDoctor
+                                            .mt-3
+                                                .card.text-bg-light.mb-3.h-100(style='max-width: 18rem;')
+                                                    .card-header(style='height: 4rem;') Ref:  #{chatWithoutDoctor.idChat} #{chatWithoutDoctor.nameChat}  
+                                                    .card-body
+                                                        p.card-text.text-danger Consulta pendiente
+                                                        .row    
+                                                            .col-3                                                     
+                                                                a.btn.btn-primary(href="/chat/"+chatWithoutDoctor.idChat) Unir
+                                                            .col-8                                                                     
+                                                                form(action="/users/finalize/"+chatWithoutDoctor.idChat method="POST")
+                                                                    button(type="submit").btn.btn-danger.ms-1 Finalizar
+                                if(chatsFinished.length>0)
+                                    hr
+                                    h2 Consultas finalizadas
+                                    .row
+                                        each chatFinished in chatsFinished
+                                            .col-lg-4.mt-3
+                                                .card.text-bg-light.mb-3.opacity-50.h-100(style='max-width: 18rem;')
+                                                    .card-header(style='height: 4rem;') #{chatFinished.nameChat} Ref:  #{chatFinished.idChat} 
+                                                    .card-body
+                                                        p.card-text Consulta finalizada
+                                                        form(action="/users/finalize/"+chatFinished.idChat method="POST")
+                                                            a.btn.btn-primary(href="/chat/"+chatFinished.idChat) Ver historia                                                          
+    script(src='https://cdn.socket.io/4.7.2/socket.io.min.js')
+    script.
+        function createRoom()
+        {
+        const socket = io().connect();
+        let nickname = '#{userInfo.nickname}';
+        let userId = '#{userId}';  
+        let username = '#{userInfo.nickname}'
+        let nameRole = '#{userInfo.nameRole}'
+        let img = '#{userInfo.img}'
+        dataNewRoom = {nickname: nickname, userId: userId,socketId:socket.id};
+        if (socket && userId) 
+        socket.emit('create', dataNewRoom, (response) => {
+        let dataFirstMessage= {
+        message:textconsult.value,
+        roomId:response.roomId,
+        username:username,
+        name:name,
+        userId:userId,
+        nameRole:nameRole,
+        img:img,
+        nickname:nickname
+        }
+        if (response.isConsultCreated)
+        {
+            alert("Ya tienes consulta pendiente");
+            window.location.href = "/chat/"+response.roomId;
+        }
+        else {
+        let roomCreatedId = response.roomId;
+        socket.emit('chat message', dataFirstMessage, (response) => {
+        console.log('data to send:',dataFirstMessage)
+        window.location.href = "/chat/"+roomCreatedId;
+        });
+        document.getElementById("createButton").remove();
+        console.log(response.roomName);
+        const main = document.getElementById("main");
+        // Create div element with class 'card text-dark bg-light mb-3'
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'card text-dark bg-light mb-3 h-100';
+        cardDiv.style.width = '17rem';
+        // Create div element with class 'card-header' and set its text content
+        const cardHeader = document.createElement('div');
+        cardHeader.className = 'card-header';
+        cardHeader.style.height = '4rem';
+        cardHeader.textContent = response.roomName;
+        // Create div element with class 'card-body'
+        const cardBodyDiv = document.createElement('div');
+        cardBodyDiv.className = 'card-body';
+        // Create h5 element with class 'card-title' and set its text content
+        const cardTitle = document.createElement('h5');
+        cardTitle.className = 'card-title';
+        cardTitle.textContent = '';
+        // Create p element with class 'card-text' and set its text content
+        const cardText = document.createElement('p');
+        cardText.className = 'card-text';
+        cardText.textContent = "Haz creado nueva consulta";
+        // Create a element with class 'btn btn-primary' and set its attributes
+        const link = document.createElement('a');
+        link.href = "/chat/"+response.roomId;
+        link.className = 'btn btn-primary';
+        link.textContent = 'Unir consulta';
+        // Append all the created elements to the appropriate parent elements
+        cardDiv.appendChild(cardHeader);
+        cardDiv.appendChild(cardBodyDiv);
+        cardBodyDiv.appendChild(cardTitle);
+        cardBodyDiv.appendChild(cardText);
+        cardBodyDiv.appendChild(link);
+        // Append the cardDiv to the document body or any other desired parent element
+        main.prepend(cardDiv);     
+        }   
+        }); 
+        }

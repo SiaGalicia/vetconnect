@@ -1,0 +1,307 @@
+extends layout
+
+block content
+    main.content
+        .container.p-0
+            h1.h3.mb-3 
+            .card
+                .row.g-0
+                    .col-12.col-lg-5.col-xl-3.border-right.border-end
+                        .py-2.px-4.border-bottom.d-none.d-md-block
+                            .d-flex.align-items-center
+                                .flex-grow-1
+                                    h5.mt-2 Participantes 
+                        #users
+                            each user in users
+                                if (user.nameRole=="ROLE_ADMIN"||user.nameRole=="ROLE_DOCTOR")
+                                    .d-flex.align-items-start.mt-2(id=`id${user.idUser}`)
+                                        if(user.img)
+                                            img.rounded-circle.mx-1(src='/upload/'+user.img alt=user.username width='40' height='40')
+                                        else 
+                                            img.rounded-circle.mx-1(src='/img/doctor.png' alt=user.username width='40' height='40')
+                                        .flex-grow-1.ml-3
+                                            | #{user.name} 
+                                            .small
+                                                spani.bi.bi-circle-fill.chat-offline
+                                                |  Offline
+                                if (user.nameRole=="ROLE_USER")
+                                    .d-flex.align-items-start.mt-2(id=`id${user.idUser}`)
+                                        if(user.img)
+                                            img.rounded-circle.mx-1(src='/upload/'+user.img alt=user.username width='40' height='40')
+                                        else 
+                                            img.rounded-circle.mx-1(src='/img/user.png' alt=user.username width='40' height='40')
+                                        .flex-grow-1.ml-3
+                                            | #{user.name} 
+                                            if((user.familiarName)&&(user.familiarType))
+                                                span.text-muted.mt-1 con #{user.familiarName} (#{user.familiarType})
+                                            if((user.familiarName)&&(!user.familiarType))
+                                                span.text-muted.mt-1 con #{user.familiarName}
+                                            .small
+                                                spani.bi.bi-circle-fill.chat-offline
+                                                |  Offline                                            
+                        hr.d-block.d-lg-none.mt-1.mb-0
+                    .col-12.col-lg-7.col-xl-9
+                        .py-2.px-4.border-bottom.d-none.d-lg-block
+                            .d-flex.justify-content-between.py-1
+                                h5 #{chatInfo.nameChat}
+                        .position-relative
+                            #messages.chat-messages.p-4
+                                each message in messages
+                                    if (message.username!=username)
+                                        .chat-message-left.pb-4.wigthdiv
+                                            div
+                                                img.rounded-circle.mr-1(src='/upload/'+message.img alt=message.name width='40' height='40')                                                
+                                            #textbox.flex-shrink-1.bg-light.rounded.py-2.px-3.ml-3
+                                                strong.font-weight-bold.mb-1 #{message.name}:
+                                                |   #{message.textMessage}
+                                                if (message.file)
+                                                    .text-muted.small.text-nowrap.mt-2
+                                                        a(href='/upload/'+message.file  target="_blank")
+                                                            if ((/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i).test(message.file))
+                                                                img.mt-5(width='150px' src='/upload/'+message.file)
+                                                            else
+                                                                | #{message.file}
+                                                .text-muted.small.text-nowrap.mt-2 #{message.dateMessage}
+                                    if (message.username== username)
+                                        .chat-message-right.pb-4.wigthdiv
+                                            div
+                                                img.rounded-circle.mr-1(src='/upload/'+message.img alt=message.name width='40' height='40')
+                                            #textbox.flex-shrink-1.bg-light.rounded.py-2.px-3.mr-3
+                                                strong.font-weight-bold.mb-1 Tú:
+                                                |   #{message.textMessage}
+                                                if (message.file)
+                                                    .text-muted.small.text-nowrap.mt-2
+                                                        a(href='/upload/'+message.file  target="_blank")
+                                                            if ((/\.(gif|jpe?g|tiff?|png|webp|bmp)$/i).test(message.file))
+                                                                img.mt-5(width='150px' src='/upload/'+message.file)
+                                                            else
+                                                                | #{message.file}                                         
+                                                .text-muted.small.text-nowrap.mt-2 #{message.dateMessage}
+                        if (chatInfo.isFinished==0)
+                            form#form.form-inline(action='').form-horizontal
+                                .flex-grow-0.py-3.px-4.border-top.input-group                                
+                                    #inputgroup.col-1
+                                        label(tabindex="0").input-group
+                                            .row
+                                                .col-1                                                
+                                                    h2
+                                                        i.bi.bi-paperclip  
+                                                .col-1                           
+                                                    input#inputfile.inputfile(type='file' size="1")                                    
+                                    .col-10
+                                        textarea#input.form-control(autocomplete='off'  placeholder='Mensaje' maxlength="4096" accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, text/plain, application/pdf, image/*" style='height: calc(1.5em + .75rem + 2px);')
+                                    .col-1                       
+                                        button.btn.btn-primary Enviar
+                                    .row
+                                        .col-12
+                                            #paperclip.span
+                        if (chatInfo.isFinished==1)
+                            form#form.form-inline(action='').form-horizontal
+                                .flex-grow-0.py-3.px-4.border-top.input-group                                
+                                    #inputgroup.col-1
+                                        label(tabindex="0").input-group
+                                            .row
+                                                .col-1                                                
+                                                    h2
+                                                        i.bi.bi-paperclip  
+                                                .col-1                           
+                                                    input#inputfile.inputfile(type='file' size="1")                                    
+                                    .col-10
+                                        input#input.form-control(autocomplete='off' type='text' placeholder='Mensaje' maxlength="4096" disabled value="Consulta finalizada" accept="application/msword, application/vnd.ms-excel, application/vnd.ms-powerpoint, text/plain, application/pdf, image/*")                                  
+                                    .col-1                       
+                                        //- button.btn.btn-primary Enviar
+                                    .row
+                                        .col-12
+                                            #paperclip.span
+    script(src='https://cdn.socket.io/4.7.2/socket.io.min.js')
+    script.
+        document.getElementById('inputfile').addEventListener('change', function(inputfile) {
+        if (inputfile.target.files[0]) {
+        document.getElementById('paperclip').append(inputfile.target.files[0].name);
+        }
+        });
+        // Get the file input element
+        const fileInput = document.getElementById('inputfile');
+        // Add event listener to trigger file input when paperclip icon is clicked
+        var messagesContainer = document.getElementById("messages");
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        const socket = io().connect();
+        const form = document.getElementById('form');
+        const input = document.getElementById('input');
+        const messages = document.getElementById('messages');
+        let roomId = '#{roomId}';
+        //- console.log(!{username});
+        let username = '#{username}';
+        let name = '#{name}';
+        let userId = '#{userId}';
+        let role = '#{role}';
+        let nickname = '#{nickname}';
+        let familiarName = '#{familiarName}';
+        let familiarType = '#{familiarType}';
+        let img = '#{img}';
+        let file = null;
+        let filename =null; 
+        data = {socketId:socket.id,dusername: username, img:img, name:name,nickname:nickname, userId: userId, role: role, sessionID: socket.id, roomId: roomId,familiarName:familiarName,familiarType:familiarType};
+        console.log(`Connecting socket ${socket.id}`);
+        if (socket && roomId && userId) {
+            console.log('Joining.. ' + data)
+            socket.emit('join', data);
+            socket.emit('make online', data);
+        }
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();            
+            file = null;
+            filename =null;             
+            if (fileInput.files[0])
+            {
+            file = fileInput.files[0];
+            filename =fileInput.files[0].name
+            }            
+            if (input.value||file) {
+                let data= {
+                    message:input.value,
+                    roomId:roomId,
+                    username:username,
+                    name:name,
+                    userId:userId,
+                    nameRole:role,
+                    file:file,
+                    filename:filename,
+                    img:img
+                }
+                console.log('data to send:',data);
+                socket.emit('chat message', data);
+                input.value = '';
+                inputfile.value = '';
+                fileInput.files[0]=null;
+                if (document.getElementById('paperclip').firstChild)
+                {
+                document.getElementById('paperclip').firstChild.remove();
+                }
+            }
+        });
+        // Function to append a new message to the chat interface
+        function appendMessage(data) {
+            const item = document.createElement('div');
+            if ((data.username!= username)) {
+                item.classList.add('chat-message-left', 'pb-4', 'wigthdiv');
+            } else if ((data.username== username)) {
+                item.classList.add('chat-message-right', 'pb-4', 'wigthdiv');
+                data.name="Tú"
+            }
+            const imageElement = document.createElement('img');
+            imageElement.classList.add('rounded-circle', 'mr-1');
+            imageElement.src = '/upload/'+data.img;
+            imageElement.alt = data.name;
+            imageElement.width = 40;
+            imageElement.height = 40;
+            const a = document.createElement('a');
+            const img = document.createElement('img');
+            // Set attributes
+            a.href = '/upload/' + data.file;
+            a.target = '_blank';
+            a.innerHTML=data.file;
+            // Append img to a
+            a.appendChild(img);
+            const dateElement = document.createElement('div');
+            dateElement.classList.add('text-muted', 'small', 'text-nowrap', 'mt-2');
+            dateElement.textContent = data.dateMessage;
+            const contentElement = document.createElement('div');
+            contentElement.id = 'textbox';
+            contentElement.classList.add('flex-shrink-1', 'bg-light', 'rounded', 'py-2', 'px-3', 'ml-3');
+            const usernameElement = document.createElement('strong');
+            usernameElement.classList.add('font-weight-bold', 'mb-1');
+            usernameElement.textContent = data.name;
+            const messageTextNode = document.createTextNode(data.message);
+            contentElement.appendChild(usernameElement);
+            contentElement.appendChild(document.createTextNode(': '));
+            contentElement.appendChild(messageTextNode);
+            item.appendChild(imageElement);
+            contentElement.appendChild(dateElement);
+            contentElement.appendChild(a);
+            item.appendChild(contentElement);
+            messages.appendChild(item);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        function appendUser(data) {
+        // Assuming user object with properties img, username, and name
+        var user = {
+            img: data.img,
+            username: data.username,
+            name: data.name,
+            nickname: data.nickname,
+            familiarName:data.familiarName,
+            familiarType:data.familiarType
+        };
+        var div = document.createElement('div');
+        var img = document.createElement('img');
+        var innerDiv = document.createElement('div');
+        var textNode = document.createTextNode(user.name);
+        const spanUserName = document.createElement('span');
+        spanUserName.appendChild(textNode);
+        div.appendChild(spanUserName);
+        const spanText = document.createElement('span');
+        spanText.classList.add('text-muted', 'small', 'mt-1');
+        if (user.familiarName&&user.familiarType){
+        const textNode2 = document.createTextNode(' con '+ user.familiarName + ' (' + user.familiarType + ')');
+        spanText.appendChild(textNode2);            
+        }
+        else if (user.familiarName&&!user.familiarType)
+        {
+        const textNode2 = document.createTextNode(' con '+ user.familiarName);
+        spanText.appendChild(textNode2);
+        }
+        const small = document.createElement('div');
+        small.classList.add('small');
+        const spanStatus = document.createElement('span');
+        spanStatus.classList.add('bi', 'bi-circle-fill', 'chat-online', 'me-1');
+        small.appendChild(spanStatus);
+        const offlineText = document.createTextNode('Online');
+        small.appendChild(offlineText);
+        div.classList.add('d-flex', 'align-items-start', 'mt-2');
+        img.classList.add('rounded-circle', 'mx-1');
+        img.src = '/upload/' + user.img;
+        img.alt = user.username;
+        img.width = '40';
+        img.height = '40';
+        innerDiv.classList.add('flex-grow-1', 'ml-3');
+        innerDiv.appendChild(textNode);
+        innerDiv.appendChild(spanText);
+        innerDiv.appendChild(small);
+        div.appendChild(img);
+        div.appendChild(innerDiv);
+        document.getElementById('users').appendChild(div);            
+        }        
+        function makeUserOnline(data) {
+        const statusDiv = document.querySelector(`#id${data.userId} .small`);
+        if (statusDiv) {
+        statusDiv.firstChild.classList.remove('chat-offline');
+        statusDiv.firstChild.classList.add('chat-online');
+        statusDiv.firstChild.classList.add(`${data.socketId}`);
+        statusDiv.childNodes[1].textContent = ' Online';
+        console.log(`${data.socketId} online`);
+        }
+        }
+        function makeUserOffline(socketId) {
+        const statusSpan= document.getElementsByClassName(`${socketId}`);
+        if (statusSpan[0]) {
+        console.log('became offline:',statusSpan[0])
+        statusSpan[0].classList.remove('chat-online');
+        statusSpan[0].classList.add('chat-offline');
+        statusSpan[0].parentNode.childNodes[1].textContent = ' Offline';
+        }
+        }        
+        socket.on('chat message', (data) => {
+        console.log('message:',data)
+        appendMessage(data);
+        });
+        socket.on('join', (data) => {
+        appendUser(data);
+        });
+        socket.on('make online', (data) => {
+        makeUserOnline(data);
+        });
+        socket.on('user disconnected', socketId =>
+        {
+        makeUserOffline(socketId);
+        })
